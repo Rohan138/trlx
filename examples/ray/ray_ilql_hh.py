@@ -72,14 +72,14 @@ def main():
     )
 
 if __name__ == '__main__':
-    ray.init()
+    ray.init("local")
     AccelerateTrainer(
         main,
-        accelerate_config="configs/accelerate/zero2-bf16.yaml",
+        accelerate_config="configs/accelerate/zero3_offload.yaml",
         scaling_config=ScalingConfig(
             trainer_resources={"CPU": 0},
-            num_workers=16,
+            num_workers=8,
             use_gpu=True,
-            resources_per_worker={"CPU": 8, "GPU": 1}
+            resources_per_worker={"CPU": 24, "GPU": 1}
         )
     ).fit()
