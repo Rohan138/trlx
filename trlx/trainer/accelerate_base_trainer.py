@@ -522,6 +522,8 @@ class AccelerateRLTrainer(BaseRLTrainer):
 
         # For each epoch
         for _ in range(self.config.train.epochs):
+            start_time = time()
+            total_samples = 0
             # For each batch
             for mbs in MiniBatchIterator(self.train_dataloader, self.mb_size, self.num_mb):
                 # For each update per batch
@@ -534,6 +536,7 @@ class AccelerateRLTrainer(BaseRLTrainer):
                     backward_time = 0
                     stats_accum = []
                     for mb in mbs:
+                        total_samples += len(mb)
                         with self._accumulate():
                             forward_time -= time()
                             loss, stats = self.loss(mb)
@@ -611,6 +614,9 @@ class AccelerateRLTrainer(BaseRLTrainer):
                 self.post_backward_callback()
 
             self.post_epoch_callback()
+            end_time = time()
+            stats["time/epoch"] = end_time - start_time
+            stats["time/samples_per_epoch"] = total_samples
         tbar.close()
 
     @abstractmethod

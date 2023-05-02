@@ -21,9 +21,9 @@ from trlx.data.default_configs import (
 config = TRLConfig(
     train=TrainConfig(
         seq_length=1024,
-        batch_size=4,
-        epochs=100,
-        total_steps=20000,
+        batch_size=1,
+        epochs=2,
+        total_steps=int(1e10),
         checkpoint_interval=10000,
         eval_interval=1000,
         pipeline="PromptPipeline",
@@ -58,10 +58,11 @@ def preprocess(sample):
 
 
 def main():
+    test_ds_size = 1024
     dataset = load_dataset("Dahoas/static-hh").map(preprocess)
-    prompts_outputs = sum(dataset["train"]["prompt_output"], [])
+    prompts_outputs = sum(dataset["train"]["prompt_output"][:test_ds_size], [])
     eval_prompts = dataset["test"]["prompt"][:128]
-    rewards = sum(dataset["train"]["reward"], [])
+    rewards = sum(dataset["train"]["reward"][:test_ds_size], [])
 
     trlx.train(
         samples=prompts_outputs,
@@ -72,7 +73,7 @@ def main():
     )
 
 if __name__ == '__main__':
-    ray.init("local")
+    ray.init()
     AccelerateTrainer(
         main,
         accelerate_config="configs/accelerate/zero3_offload.yaml",
@@ -80,6 +81,6 @@ if __name__ == '__main__':
             trainer_resources={"CPU": 0},
             num_workers=8,
             use_gpu=True,
-            resources_per_worker={"CPU": 24, "GPU": 1}
+            resources_per_worker={"CPU": 12, "GPU": 1}
         )
     ).fit()
