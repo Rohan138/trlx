@@ -79,8 +79,8 @@ if __name__ == '__main__':
         accelerate_config="configs/accelerate/zero3_offload.yaml",
         scaling_config=ScalingConfig(
             trainer_resources={"CPU": 0},
-            num_workers=8,
+            num_workers=16,
             use_gpu=True,
-            resources_per_worker={"CPU": 12, "GPU": 1}
+            resources_per_worker={"CPU": 24, "GPU": 1}
         )
     ).fit()

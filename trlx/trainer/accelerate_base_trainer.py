@@ -522,7 +522,6 @@ class AccelerateRLTrainer(BaseRLTrainer):
 
         # For each epoch
         for _ in range(self.config.train.epochs):
-            start_time = time()
             total_samples = 0
             # For each batch
             for mbs in MiniBatchIterator(self.train_dataloader, self.mb_size, self.num_mb):
@@ -536,7 +535,7 @@ class AccelerateRLTrainer(BaseRLTrainer):
                     backward_time = 0
                     stats_accum = []
                     for mb in mbs:
-                        total_samples += len(mb)
+                        total_samples += mb.rewards.size()
                         with self._accumulate():
                             forward_time -= time()
                             loss, stats = self.loss(mb)
@@ -552,9 +551,11 @@ class AccelerateRLTrainer(BaseRLTrainer):
                     # How does accelerate do it?
                     stats = {key: sum([stats[key] for stats in stats_accum]) / self.num_mb for key in stats_accum[0]}
 
+                    step_time = -time()
                     self.opt.step()
                     self.opt.zero_grad()
                     self.scheduler.step()
+                    step_time += time()
                     self.iter_count += 1
 
                     if (
@@ -571,6 +572,9 @@ class AccelerateRLTrainer(BaseRLTrainer):
 
                     stats["time/forward"] = forward_time
                     stats["time/backward"] = backward_time
+                    stats["time/step"] = step_time
+                    stats["time/total"] = forward_time + backward_time + step_time
+                    stats["time/total_samples"] = total_samples
                     for group_number, lr in enumerate(self.scheduler.get_last_lr()):
                         stats[f"learning_rate_group_{group_number}"] = lr
 
@@ -614,9 +618,6 @@ class AccelerateRLTrainer(BaseRLTrainer):
                 self.post_backward_callback()
 
             self.post_epoch_callback()
-            end_time = time()
-            stats["time/epoch"] = end_time - start_time
-            stats["time/samples_per_epoch"] = total_samples
         tbar.close()
 
     @abstractmethod
