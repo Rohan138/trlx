@@ -58,11 +58,10 @@ def preprocess(sample):
 
 
 def main():
-    test_ds_size = 1024
     dataset = load_dataset("Dahoas/static-hh").map(preprocess)
-    prompts_outputs = sum(dataset["train"]["prompt_output"][:test_ds_size], [])
+    prompts_outputs = sum(dataset["train"]["prompt_output"], [])
     eval_prompts = dataset["test"]["prompt"][:128]
-    rewards = sum(dataset["train"]["reward"][:test_ds_size], [])
+    rewards = sum(dataset["train"]["reward"], [])
 
     trlx.train(
         samples=prompts_outputs,

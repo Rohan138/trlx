@@ -1,0 +1,31 @@
+{
+    "fp16": {
+        "enabled": false
+    },
+    "bf16": {
+        "enabled": true
+    },
+    "zero_optimization": {
+        "stage": 3,
+        "allgather_partitions": "auto",
+        "allgather_bucket_size": "auto",
+        "reduce_scatter": "auto",
+        "reduce_bucket_size": "auto",
+        "overlap_comm": false,
+        "contiguous_gradients" : true,
+        "offload_optimizer": {
+            "device": "cpu",
+            "pin_memory": true
+        },
+        "offload_param": {
+            "device": "cpu",
+            "pin_memory": true
+        },
+        "stage3_max_live_parameters": "auto",
+        "stage3_max_reuse_distance": "auto",
+        "stage3_prefetch_bucket_size": "auto",
+        "stage3_param_persistence_threshold": "auto",
+        "sub_group_size": "auto",
+        "stage3_gather_16bit_weights_on_model_save": true
+    }
+}
