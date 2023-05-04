@@ -535,7 +535,7 @@ class AccelerateRLTrainer(BaseRLTrainer):
                     backward_time = 0
                     stats_accum = []
                     for mb in mbs:
-                        total_samples += mb.rewards.size()
+                        total_samples += mb.rewards.size()[0]
                         with self._accumulate():
                             forward_time -= time()
                             loss, stats = self.loss(mb)
