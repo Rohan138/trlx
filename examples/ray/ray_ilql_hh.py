@@ -20,7 +20,7 @@ from trlx.data.default_configs import (
 
 config = TRLConfig(
     train=TrainConfig(
-        seq_length=1024,
+        seq_length=256,
         batch_size=1,
         epochs=100,
         total_steps=int(1e10),
@@ -30,7 +30,7 @@ config = TRLConfig(
         trainer="AccelerateILQLTrainer",
         checkpoint_dir="checkpoints/ilql_hh",
     ),
-    model=ModelConfig(model_path="EleutherAI/gpt-j-6B", num_layers_unfrozen=-1),
+    model=ModelConfig(model_path="EleutherAI/gpt-j-6B", num_layers_unfrozen=2),
     tokenizer=TokenizerConfig(tokenizer_path="EleutherAI/gpt-j-6B", truncation_side="left"),
     optimizer=OptimizerConfig(name="adamw", kwargs=dict(lr=1e-6, betas=(0.9, 0.95), eps=1.0e-8, weight_decay=1.0e-6)),
     scheduler=SchedulerConfig(name="cosine_annealing", kwargs=dict(T_max=1000000000, eta_min=1e-6)),
