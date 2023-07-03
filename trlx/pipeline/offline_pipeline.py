@@ -123,7 +123,7 @@ class PromptPipeline(BasePipeline):
 
     def __init__(
         self,
-        prompts: Union[Dict[str, Any], List[str]],
+        prompts: Union[List[Dict[str, Any]], List[str]],
         max_prompt_length: int,
         tokenizer: PreTrainedTokenizer,
         add_special_tokens: bool = False,
@@ -155,7 +155,7 @@ class PromptPipeline(BasePipeline):
     def __len__(self) -> int:
         return len(self.prompts)
 
-    def create_loader(self, batch_size: int, shuffle=False) -> DataLoader:
+    def create_loader(self, batch_size: int, shuffle=False, sampler=None, drop_last=False) -> DataLoader:
         def collate_fn(xs):
             out = self.tokenizer.pad([{"input_ids": x["input_ids"]} for x in xs], return_tensors="pt")
 
@@ -165,7 +165,17 @@ class PromptPipeline(BasePipeline):
 
             return out
 
-        return DataLoader(self, batch_size=batch_size, collate_fn=collate_fn, shuffle=shuffle)
+        # Since all data is already pre-processed, no need to have
+        # multi-process data loading
+        return DataLoader(
+            self,
+            batch_size=batch_size,
+            collate_fn=collate_fn,
+            shuffle=shuffle,
+            sampler=sampler,
+            num_workers=0,
+            drop_last=drop_last,
+        )
 
 
 def ilql_collate_fn(elems: Iterable[ILQLElement]):
@@ -207,13 +217,13 @@ class ILQLRolloutStorage(BaseRolloutStore):
     def __len__(self) -> int:
         return len(self.input_ids)
 
-    def create_loader(self, batch_size: int, drop_last=True):
+    def create_loader(self, batch_size: int):
         return DataLoader(
             self,
             batch_size=batch_size,
             shuffle=True,
             collate_fn=ilql_collate_fn,
-            drop_last=drop_last,
+            drop_last=torch.distributed.is_initialized(),
         )
 
 
@@ -259,11 +269,11 @@ class ILQLSeq2SeqRolloutStorage(BaseRolloutStore):
     def __len__(self) -> int:
         return len(self.input_ids)
 
-    def create_loader(self, batch_size: int, drop_last=True):
+    def create_loader(self, batch_size: int):
         return DataLoader(
             self,
             batch_size=batch_size,
             shuffle=True,
             collate_fn=ilql_seq2seq_collate_fn,
-            drop_last=drop_last,
+            drop_last=torch.distributed.is_initialized(),
         )
